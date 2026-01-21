@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Standard Performance AI Survey - Executive Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =============================================================================
+   CSS VARIABLES & RESET
+   ============================================================================= */
+:root{
+    --primary:#1565C0;
+    --primary-dark:#0D47A1;
+    --dark:#2D2D2D;
+    --gray:#666;
+    --light:#E8E8E8;
+    --bg:#F5F5F5;
+    --green:#28a745;
+    --orange:#FF9800;
+    --blue:#2196F3;
+    --purple:#7B1FA2;
+    --red:#C8102E;
+    --accent-light:#E3F2FD
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Prompt',sans-serif;background:var(--bg);color:var(--dark);font-size:14px;line-height:1.5}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+
+/* =============================================================================
+   HEADER
+   ============================================================================= */
+.header{
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    color:#fff;
+    padding:24px;
+    border-radius:16px;
+    margin-bottom:20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:15px
+}
+.header h1{font-size:1.4rem;display:flex;align-items:center;gap:10px}
+.header p{opacity:.9;font-size:.85rem}
+.header-stats{display:flex;gap:30px}
+.header-stat{text-align:center}
+.header-stat-value{font-size:1.8rem;font-weight:700}
+.header-stat-label{font-size:.75rem;opacity:.85}
+
+/* =============================================================================
+   STATUS BAR
+   ============================================================================= */
+.status-bar{
+    background:#fff;
+    padding:12px 20px;
+    border-radius:12px;
+    margin-bottom:20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,.06)
+}
+.status-item{display:flex;align-items:center;gap:8px;font-size:.85rem}
+.status-dot{width:10px;height:10px;border-radius:50%;background:#ccc}
+.status-dot.online{background:var(--green);animation:pulse 2s infinite}
+.status-dot.loading{background:var(--orange);animation:pulse 1s infinite}
+.status-dot.error{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* =============================================================================
+   FILTER BAR
+   ============================================================================= */
+.filter-bar{
+    background:#fff;
+    padding:15px 20px;
+    border-radius:12px;
+    margin-bottom:20px;
+    display:flex;
+    gap:15px;
+    flex-wrap:wrap;
+    align-items:center;
+    box-shadow:0 2px 8px rgba(0,0,0,.06)
+}
+.filter-group{display:flex;align-items:center;gap:8px}
+.filter-group label{font-weight:500;font-size:.85rem;color:var(--gray)}
+select,input[type=text]{padding:8px 12px;border:2px solid var(--light);border-radius:8px;font-family:inherit;font-size:.85rem}
+select:focus,input:focus{outline:none;border-color:var(--primary)}
+.btn{padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:.85rem;font-weight:500;cursor:pointer;transition:background .2s}
+.btn:hover{background:var(--primary-dark)}
+.btn.sec{background:var(--light);color:var(--dark)}
+.btn.sec:hover{background:#ddd}
+
+/* =============================================================================
+   KPI ROW
+   ============================================================================= */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:15px;margin-bottom:20px}
+.kpi{background:#fff;padding:18px;border-radius:12px;text-align:center;border-left:4px solid var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.kpi.green{border-left-color:var(--green)}
+.kpi.blue{border-left-color:var(--blue)}
+.kpi.orange{border-left-color:var(--orange)}
+.kpi.red{border-left-color:var(--red)}
+.kpi-value{font-size:1.6rem;font-weight:700}
+.kpi-label{font-size:.8rem;color:var(--gray);margin-top:4px}
+.kpi-hint{font-size:.7rem;margin-top:6px;padding:2px 8px;border-radius:12px;display:inline-block;background:var(--accent-light);color:var(--primary)}
+.kpi-hint.warning{background:#FFF3E0;color:var(--orange)}
+.kpi-hint.danger{background:#FFEBEE;color:var(--red)}
+
+/* =============================================================================
+   GRID & CARDS
+   ============================================================================= */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);overflow:hidden}
+.card.full{grid-column:1/-1}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--light);display:flex;align-items:center;gap:10px}
+.card-badge{width:28px;height:28px;background:var(--primary);color:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.8rem}
+.card-title h3{font-size:.9rem;font-weight:600}
+.card-title p{font-size:.7rem;color:var(--gray)}
+.card-body{padding:18px}
+
+/* =============================================================================
+   DEPARTMENT SNAPSHOT (Card A)
+   ============================================================================= */
+.dept-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.dept-card{padding:10px;background:var(--bg);border-radius:8px;text-align:center;border-left:3px solid var(--primary)}
+.dept-card .dept-name{font-size:.75rem;font-weight:500;margin-bottom:4px}
+.dept-card .dept-count{font-size:1.2rem;font-weight:700;color:var(--primary)}
+
+/* =============================================================================
+   TEAM COMPARISON (Legacy - kept for compatibility)
+   ============================================================================= */
+.team-compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px}
+/* =============================================================================
+   LEVEL DISTRIBUTION (Card B1)
+   ============================================================================= */
+.level-bars{display:flex;flex-direction:column;gap:8px}
+.level-item{display:flex;align-items:center;gap:10px}
+.level-badge{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.75rem}
+.l0{background:#E0E0E0}.l1{background:#FFCDD2}.l2{background:#FFAB91}.l3{background:#FFE082}.l4{background:#A5D6A7}.l5{background:#4CAF50;color:#fff}
+.level-info{flex:1}
+.level-top{display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:3px}
+.level-count{font-weight:600;color:var(--primary)}
+.level-track{height:6px;background:var(--light);border-radius:3px;overflow:hidden}
+.level-fill{height:100%;border-radius:3px}
+
+/* =============================================================================
+   TOOL ADOPTION (Card B2)
+   ============================================================================= */
+.tool-grid{display:flex;flex-wrap:wrap;gap:6px}
+.tool-chip{padding:5px 10px;background:var(--bg);border-radius:12px;font-size:.72rem;display:flex;align-items:center;gap:4px}
+.tool-chip .cnt{background:var(--primary);color:#fff;padding:1px 5px;border-radius:6px;font-size:.6rem;font-weight:600}
+.tool-section{margin-bottom:10px}
+.tool-label{font-size:.7rem;color:var(--gray);margin-bottom:5px;font-weight:500}
+
+/* =============================================================================
+   FREQUENCY CHART (Card B3)
+   ============================================================================= */
+.freq-chart{display:flex;align-items:flex-end;justify-content:space-around;height:140px;padding-top:20px}
+.freq-wrap{display:flex;flex-direction:column;align-items:center;gap:5px}
+.freq-bar{width:36px;background:linear-gradient(to top,var(--primary),var(--primary-dark));border-radius:4px 4px 0 0;position:relative;min-height:4px}
+.freq-val{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:.7rem;font-weight:600}
+.freq-lbl{font-size:.6rem;color:var(--gray);text-align:center;max-width:55px}
+
+/* =============================================================================
+   DAILY WORK / RANKING (Card C)
+   ============================================================================= */
+.work-list{display:flex;flex-direction:column;gap:6px}
+.work-item{display:flex;align-items:center;gap:8px}
+.work-rank{width:20px;height:20px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:600}
+.work-info{flex:1}
+.work-name{font-size:.7rem;margin-bottom:2px}
+.work-track{height:4px;background:var(--light);border-radius:2px;overflow:hidden}
+.work-fill{height:100%;background:var(--primary)}
+.work-pct{font-size:.75rem;font-weight:700;color:var(--primary);min-width:35px;text-align:right}
+
+/* =============================================================================
+   PROBLEM LIST (Card D1)
+   ============================================================================= */
+.problem-list{display:flex;flex-direction:column;gap:6px}
+.problem-item{display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg);border-radius:6px}
+.problem-icon{width:26px;height:26px;background:#FFEBEE;color:var(--red);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.8rem}
+.problem-name{flex:1;font-size:.75rem}
+.problem-cnt{font-size:.9rem;font-weight:700;color:var(--red)}
+
+/* =============================================================================
+   THEME GRID (Card D2)
+   ============================================================================= */
+.theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
+.theme-card{padding:8px;background:var(--bg);border-radius:6px;display:flex;align-items:center;gap:6px}
+.theme-icon{width:28px;height:28px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.theme-name{font-size:.7rem;font-weight:500}
+.theme-votes{font-size:.6rem;color:var(--gray)}
+
+/* =============================================================================
+   MATRIX (Card D3)
+   ============================================================================= */
+.matrix{position:relative;width:100%;height:280px;background:linear-gradient(to right,#E3F2FD 50%,#FFF3E0 50%);border-radius:8px;overflow:hidden}
+.matrix::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(0,0,0,.1)}
+.matrix::after{content:'';position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(0,0,0,.1)}
+.quad{position:absolute;font-size:.6rem;font-weight:600;color:var(--gray);opacity:.7}
+.quad.tl{top:6px;left:6px}.quad.tr{top:6px;right:6px;text-align:right}.quad.bl{bottom:6px;left:6px}.quad.br{bottom:6px;right:6px;text-align:right}
+.bubble{position:absolute;padding:4px 8px;background:#fff;border-radius:12px;font-size:.6rem;box-shadow:0 2px 5px rgba(0,0,0,.15);cursor:pointer;white-space:nowrap;transition:transform .2s}
+.bubble:hover{transform:scale(1.1);z-index:10}
+.bubble .v{background:var(--primary);color:#fff;padding:1px 4px;border-radius:4px;font-size:.5rem;margin-left:2px}
+
+/* =============================================================================
+   RATING TABLE (Card E1)
+   ============================================================================= */
+.rating-table{width:100%;border-collapse:collapse}
+.rating-table th,.rating-table td{padding:8px;text-align:left;border-bottom:1px solid var(--light);font-size:.75rem}
+.rating-table th{font-weight:500;color:var(--gray);font-size:.7rem}
+.rating-wrap{display:flex;align-items:center;gap:6px}
+.rating-bar{flex:1;height:6px;background:var(--light);border-radius:3px;overflow:hidden;max-width:80px}
+.rating-fill{height:100%;background:var(--primary)}
+.rating-score{font-weight:700;color:var(--primary);min-width:24px}
+
+/* =============================================================================
+   IDEAS LIST (Card F)
+   ============================================================================= */
+.ideas-list{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto}
+.idea-card{padding:10px;background:var(--bg);border-radius:8px;border-left:3px solid var(--primary)}
+.idea-header{display:flex;justify-content:space-between;margin-bottom:4px}
+.idea-badge{padding:2px 6px;border-radius:8px;font-size:.55rem;font-weight:600;background:var(--accent-light);color:var(--primary)}
+.idea-text{font-size:.75rem}
+
+/* =============================================================================
+   INSIGHT & RECOMMENDATION PANELS
+   ============================================================================= */
+.insight-panel{background:linear-gradient(135deg,#E3F2FD,#BBDEFB);border-radius:12px;padding:18px;margin-top:20px}
+.insight-panel h4{display:flex;align-items:center;gap:8px;font-size:.9rem;margin-bottom:12px}
+.insight-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px}
+.insight-item{padding:10px;background:#fff;border-radius:6px;font-size:.75rem;display:flex;gap:8px}
+.insight-icon{font-size:1rem}
+
+.rec-panel{background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-radius:12px;padding:18px;margin-top:20px}
+.rec-panel h4{display:flex;align-items:center;gap:8px;font-size:.9rem;margin-bottom:12px}
+.rec-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.rec-card{background:#fff;padding:12px;border-radius:8px}
+.rec-card h5{font-size:.8rem;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.rec-card ul{list-style:none}
+.rec-card li{padding:3px 0 3px 14px;font-size:.7rem;position:relative}
+.rec-card li::before{content:"→";position:absolute;left:0;color:var(--primary)}
+
+/* =============================================================================
+   IMPORT/EXPORT PANEL
+   ============================================================================= */
+.import-panel{background:#fff;border-radius:12px;padding:18px;margin-top:20px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.import-panel h4{font-size:.9rem;margin-bottom:12px}
+.import-area{display:grid;grid-template-columns:1fr auto;gap:12px}
+@media(max-width:600px){.import-area{grid-template-columns:1fr}}
+textarea{width:100%;min-height:80px;padding:10px;border:2px dashed var(--light);border-radius:6px;font-family:monospace;font-size:.65rem;resize:vertical}
+textarea:focus{outline:none;border-color:var(--primary)}
+.import-btns{display:flex;flex-direction:column;gap:6px}
+details{margin-top:12px}
+summary{cursor:pointer;font-weight:500;font-size:.75rem;color:var(--gray)}
+pre{margin-top:8px;padding:10px;background:var(--dark);color:#E0E0E0;border-radius:6px;font-size:.6rem;overflow-x:auto;white-space:pre-wrap}
+
+/* =============================================================================
+   FOOTER & UTILITIES
+   ============================================================================= */
+.footer{text-align:center;padding:20px;color:var(--gray);font-size:.7rem;margin-top:20px}
+.toast{position:fixed;bottom:20px;right:20px;padding:10px 18px;background:var(--dark);color:#fff;border-radius:6px;font-size:.8rem;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:1000;display:none}
+.toast.success{background:var(--green)}.toast.error{background:var(--red)}
+.toast.show{display:block;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.empty-state{text-align:center;padding:40px 20px;color:var(--gray)}
+.empty-state .empty-icon{font-size:3rem;margin-bottom:10px;opacity:.5}
+.empty-state p{font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="container">
+
+<!-- =============================================================================
+     HEADER
+     ============================================================================= -->
+<header class="header">
+    <div>
+        <h1>🏗️ Standard Performance AI Survey Dashboard</h1>
+        <p>Executive View • Construction & Engineering • สแตนดาร์ด เพอร์ฟอร์แมนซ์</p>
+    </div>
+    <div class="header-stats">
+        <div class="header-stat"><div class="header-stat-value" id="totalCount">0</div><div class="header-stat-label">ผู้ตอบทั้งหมด</div></div>
+        <div class="header-stat"><div class="header-stat-value" id="deptCount">0</div><div class="header-stat-label">แผนก</div></div>
+        <div class="header-stat"><div class="header-stat-value" id="avgLevel">-</div><div class="header-stat-label">Avg Level</div></div>
+    </div>
+</header>
+
+<!-- =============================================================================
+     STATUS BAR
+     ============================================================================= -->
+<div class="status-bar">
+    <div class="status-item"><div class="status-dot" id="statusDot"></div><span id="statusText">รอเชื่อมต่อ...</span></div>
+    <div class="status-item"><span id="lastUpdate">-</span></div>
+    <div style="display:flex;gap:8px;"><button class="btn" onclick="fetchFromGoogleSheets()">🔄 Refresh</button></div>
+</div>
+
+<!-- =============================================================================
+     FILTER BAR
+     ============================================================================= -->
+<div class="filter-bar">
+    <div class="filter-group"><label>แผนก:</label>
+        <select id="deptFilter" onchange="render()">
+            <option value="all">ทุกแผนก</option>
+            <option value="project-engineering">📐 วิศวกรโครงการ</option>
+            <option value="architecture">🏛️ สถาปัตย์/ออกแบบ</option>
+            <option value="qs-boq">📊 ประมาณการ/ถอดแบบ</option>
+            <option value="site-supervision">🏗️ ควบคุมงาน/โฟร์แมน</option>
+            <option value="procurement">🛒 จัดซื้อจัดจ้าง</option>
+            <option value="warehouse">📦 คลังสินค้า/สโตร์</option>
+            <option value="logistics">🚚 ขนส่ง/โลจิสติกส์</option>
+            <option value="accounting">💰 บัญชี/การเงิน</option>
+            <option value="hr">👥 ทรัพยากรบุคคล</option>
+            <option value="safety">🦺 ความปลอดภัย</option>
+            <option value="qcqa">✅ ควบคุมคุณภาพ</option>
+            <option value="admin">📋 ธุรการ/สำนักงาน</option>
+            <option value="management">👔 ผู้บริหาร</option>
+            <option value="it">💻 IT/สารสนเทศ</option>
+            <option value="other">📌 อื่นๆ</option>
+        </select>
+    </div>
+    <div class="filter-group"><label>ค้นหา:</label><input type="text" id="searchInput" placeholder="ชื่อ, แผนก, ไอเดีย..." onkeyup="render()"></div>
+    <button class="btn sec" onclick="resetFilters()">รีเซ็ต</button>
+    <button class="btn" onclick="exportData()">📥 Export</button>
+</div>
+
+<!-- =============================================================================
+     KPI ROW
+     ============================================================================= -->
+<div class="kpi-row">
+    <div class="kpi"><div class="kpi-value" id="kpiLevel">-</div><div class="kpi-label">Avg AI Readiness</div><div class="kpi-hint" id="kpiLevelHint">-</div></div>
+    <div class="kpi green"><div class="kpi-value" id="kpiDaily">-</div><div class="kpi-label">ใช้ AI ทุกวัน</div><div class="kpi-hint">Active Users</div></div>
+    <div class="kpi blue"><div class="kpi-value" id="kpiTool">-</div><div class="kpi-label">Tool ยอดนิยม</div><div class="kpi-hint" id="kpiToolPct">-</div></div>
+    <div class="kpi orange"><div class="kpi-value" id="kpiPain">-</div><div class="kpi-label">Pain Points</div><div class="kpi-hint warning">ต้องแก้ไข</div></div>
+    <div class="kpi red"><div class="kpi-value" id="kpiExpect">-</div><div class="kpi-label">ความคาดหวังเฉลี่ย</div><div class="kpi-hint danger">สูง</div></div>
+</div>
+
+<!-- =============================================================================
+     MAIN GRID
+     ============================================================================= -->
+<div class="grid">
+    <!-- Card A: Department Snapshot -->
+    <div class="card full">
+        <div class="card-header"><div class="card-badge">A</div><div class="card-title"><h3>Department Snapshot</h3><p>ภาพรวมผู้ตอบแบ่งตามแผนก</p></div></div>
+        <div class="card-body"><div class="dept-grid" id="deptSnapshot"></div></div>
+    </div>
+
+    <!-- Card B1: AI Readiness Level -->
+    <div class="card">
+        <div class="card-header"><div class="card-badge">B1</div><div class="card-title"><h3>AI Readiness Level</h3><p>ระดับความพร้อมใช้ AI</p></div></div>
+        <div class="card-body"><div class="level-bars" id="levelDist"></div></div>
+    </div>
+
+    <!-- Card B2: AI Tools Adoption -->
+    <div class="card">
+        <div class="card-header"><div class="card-badge">B2</div><div class="card-title"><h3>AI Tools Adoption</h3><p>เครื่องมือ AI ที่ใช้</p></div></div>
+        <div class="card-body" id="toolsAdoption"></div>
+    </div>
+
+    <!-- Card B3: Usage Frequency -->
+    <div class="card">
+        <div class="card-header"><div class="card-badge">B3</div><div class="card-title"><h3>Usage Frequency</h3><p>ความถี่การใช้งาน</p></div></div>
+        <div class="card-body"><div class="freq-chart" id="freqChart"></div></div>
+    </div>
+
+    <!-- Card C: Daily Work Patterns -->
+    <div class="card">
+        <div class="card-header"><div class="card-badge">C</div><div class="card-title"><h3>Daily Work Patterns</h3><p>งานประจำที่ทำบ่อย</p></div></div>
+        <div class="card-body"><div class="work-list" id="dailyWorkList"></div></div>
+    </div>
+
+    <!-- Card D1: Pain Points -->
+    <div class="card">
+        <div class="card-header"><div class="card-badge">D1</div><div class="card-title"><h3>Pain Points</h3><p>ปัญหาที่พบบ่อย</p></div></div>
+        <div class="card-body"><div class="problem-list" id="problemList"></div></div>
+    </div>
+
+    <!-- Card D2: AI Help Needed -->
+    <div class="card">
+        <div class="card-header"><div class="card-badge">D2</div><div class="card-title"><h3>AI Help Needed</h3><p>อยากให้ AI ช่วยเรื่อง</p></div></div>
+        <div class="card-body"><div class="theme-grid" id="aiHelpThemes"></div></div>
+    </div>
+
+    <!-- Card D3: Feature Matrix -->
+    <div class="card full">
+        <div class="card-header"><div class="card-badge">D3</div><div class="card-title"><h3>Interested Features Matrix</h3><p>Impact × Effort Analysis</p></div></div>
+        <div class="card-body">
+            <div class="matrix" id="featureMatrix">
+                <div class="quad tl">⚡ Quick Wins</div>
+                <div class="quad tr">🎯 Strategic</div>
+                <div class="quad bl">🔧 Fill-ins</div>
+                <div class="quad br">❓ Reconsider</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card E1: Expectations Score -->
+    <div class="card">
+        <div class="card-header"><div class="card-badge">E1</div><div class="card-title"><h3>Expectations Score</h3><p>ความคาดหวังจากการอบรม</p></div></div>
+        <div class="card-body"><table class="rating-table" id="expectTable"></table></div>
+    </div>
+
+    <!-- Card E2: Interested Topics -->
+    <div class="card">
+        <div class="card-header"><div class="card-badge">E2</div><div class="card-title"><h3>Interested Topics</h3><p>หัวข้อที่อยากเรียนรู้</p></div></div>
+        <div class="card-body"><div class="theme-grid" id="topicsGrid"></div></div>
+    </div>
+
+    <!-- Card F: Ideas & Suggestions -->
+    <div class="card full">
+        <div class="card-header"><div class="card-badge">F</div><div class="card-title"><h3>Ideas & Suggestions</h3><p>ไอเดียและข้อเสนอแนะ</p></div></div>
+        <div class="card-body"><div class="ideas-list" id="ideasList"></div></div>
+    </div>
+</div>
+
+<!-- =============================================================================
+     INSIGHT PANEL
+     ============================================================================= -->
+<div class="insight-panel">
+    <h4>💡 Key Insights</h4>
+    <div class="insight-list" id="insightList"></div>
+</div>
+
+<!-- =============================================================================
+     RECOMMENDATION PANEL
+     ============================================================================= -->
+<div class="rec-panel">
+    <h4>🎯 Training Recommendations</h4>
+    <div class="rec-cards" id="recCards"></div>
+</div>
+
+<!-- =============================================================================
+     IMPORT/EXPORT PANEL
+     ============================================================================= -->
+<div class="import-panel">
+    <h4>📥 Data Import / Export</h4>
+    <div class="import-area">
+        <textarea id="importArea" placeholder="วาง JSON data ที่นี่..."></textarea>
+        <div class="import-btns">
+            <button class="btn" onclick="importData()">Import</button>
+            <button class="btn sec" onclick="exportData()">Export</button>
+        </div>
+    </div>
+    <details>
+        <summary>📋 View Data Schema</summary>
+        <pre id="schemaDisplay"></pre>
+    </details>
+</div>
+
+<footer class="footer">
+    <strong>Standard Performance Co., Ltd.</strong> • AI Training Survey Dashboard • Executive View v1.0
+</footer>
+</div>
+
+<script>
+// =============================================================================
+// CONFIG - Google Apps Script URL
+// =============================================================================
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzU6SVQgnTrMb7N4xx9VoenNDuNUPWIN0AfrREDLytEoZ4NU0Jr8WXStWgRImWfCugFbQ/exec'; // ใส่ URL ตรงนี้
+
+// =============================================================================
+// DATA SCHEMA (Reference)
+// =============================================================================
+/*
+{
+  respondents: [{
+    // Section A - ข้อมูลทั่วไป
+    name: string,                    // ชื่อ-นามสกุล
+    position: string,                // ตำแหน่ง
+    department: string,              // แผนก (project-engineering/architecture/qs-boq/site-supervision/procurement/warehouse/logistics/accounting/hr/safety/qcqa/admin/management/it/other)
+    departmentOther: string,         // ถ้าเลือก other
+    currentProject: string,          // โครงการปัจจุบัน
+    
+    // Section B - ประสบการณ์ AI
+    experienceLevel: number,         // 0-5
+    toolsUsed: string[],             // เครื่องมือ AI ที่ใช้
+    usageFrequency: string,          // never/monthly/weekly/multiple-weekly/daily
+    
+    // Section C - งานประจำ
+    dailyWork: {
+      engineering: string[],         // งานวิศวกรรม
+      estimation: string[],          // งานประมาณการ
+      warehouse: string[],           // งานคลัง
+      accounting: string[],          // งานบัญชี
+      admin: string[]                // งานธุรการ
+    },
+    repeatWork: string[],            // งานที่ทำซ้ำบ่อย
+    
+    // Section D - ปัญหาและความต้องการ
+    problems: {
+      dataSilo: string[],            // ปัญหา Data Silo
+      document: string[],            // ปัญหาเอกสาร
+      procurement: string[],         // ปัญหาจัดซื้อ
+      siteRecording: string[],       // ปัญหาบันทึกหน้างาน
+      security: string[]             // ปัญหาความปลอดภัย
+    },
+    painPoints: string[],            // Pain points เพิ่มเติม
+    aiHelpTop3: string[],            // สิ่งที่อยากให้ AI ช่วย Top 3
+    interestedFeatures: {
+      document: string[],            // Feature เอกสาร
+      procurement: string[],         // Feature จัดซื้อ
+      projectTracking: string[],     // Feature ติดตามโครงการ
+      warehouse: string[],           // Feature คลัง
+      technical: string[],           // Feature เทคนิค
+      communication: string[]        // Feature สื่อสาร
+    },
+    
+    // Section E - ความคาดหวัง
+    expectationsScore: {
+      understandAI: number,          // 1-5
+      speedUpWork: number,
+      analyzeData: number,
+      promptEngineering: number,
+      constructionAI: number,
+      dataSecurity: number,
+      reduceManual: number,
+      aiForReport: number,
+      otherTopic: string,
+      otherScore: number
+    },
+    interestedTopics: string[],
+    
+    // Section F - ข้อเสนอแนะ
+    keySuccess: string[],            // Key Success Factors
+    creativity: string[],            // ไอเดียสร้างสรรค์
+    concerns: string,                // ข้อกังวล
+    speakerNotes: string,            // หมายเหตุถึงวิทยากร
+    
+    timestamp: string                // ISO timestamp
+  }]
+}
+*/
+
+// =============================================================================
+// DATA (เริ่มต้นว่าง)
+// =============================================================================
+let DATA = { respondents: [] };
+
+const SCHEMA_DISPLAY = `{
+  respondents: [{
+    name, position, department, departmentOther, currentProject,
+    experienceLevel (0-5),
+    toolsUsed[],
+    usageFrequency (never/monthly/weekly/multiple-weekly/daily),
+    dailyWork: { engineering[], estimation[], warehouse[], accounting[], admin[] },
+    repeatWork[],
+    problems: { dataSilo[], document[], procurement[], siteRecording[], security[] },
+    painPoints[],
+    aiHelpTop3[],
+    interestedFeatures: { document[], procurement[], projectTracking[], warehouse[], technical[], communication[] },
+    expectationsScore: { understandAI, speedUpWork, analyzeData, promptEngineering, 
+                         constructionAI, dataSecurity, reduceManual, aiForReport },
+    interestedTopics[],
+    keySuccess[], creativity[],
+    concerns, speakerNotes,
+    timestamp
+  }]
+}`;
+
+// =============================================================================
+// LABELS
+// =============================================================================
+const DEPT_LABELS = {
+    'project-engineering': '📐 วิศวกรโครงการ',
+    'architecture': '🏛️ สถาปัตย์',
+    'qs-boq': '📊 ประมาณการ',
+    'site-supervision': '🏗️ ควบคุมงาน',
+    'procurement': '🛒 จัดซื้อ',
+    'warehouse': '📦 คลัง',
+    'logistics': '🚚 ขนส่ง',
+    'accounting': '💰 บัญชี',
+    'hr': '👥 HR',
+    'safety': '🦺 Safety',
+    'qcqa': '✅ QC/QA',
+    'admin': '📋 Admin',
+    'management': '👔 Management',
+    'it': '💻 IT',
+    'other': '📌 อื่นๆ'
+};
+
+const LEVEL_LABELS = ['ไม่เคยใช้เลย','เคยลอง 1-2 ครั้ง','ใช้เป็นครั้งคราว','ใช้สัปดาห์ละ 1-2 ครั้ง','ใช้ทุกวัน','ใช้เป็นเครื่องมือหลัก'];
+const LEVEL_COLORS = ['#E0E0E0','#FFCDD2','#FFAB91','#FFE082','#A5D6A7','#4CAF50'];
+const FREQ_MAP = { daily:'ทุกวัน', 'multiple-weekly':'หลายครั้ง/สัปดาห์', weekly:'สัปดาห์ละครั้ง', monthly:'เดือนละครั้ง', never:'ไม่เคย' };
+
+const EXPECT_LABELS = {
+    understandAI: 'เข้าใจ AI พื้นฐาน',
+    speedUpWork: 'ทำงานเร็วขึ้น',
+    analyzeData: 'วิเคราะห์ข้อมูล',
+    promptEngineering: 'เขียน Prompt เก่ง',
+    constructionAI: 'AI สำหรับงานก่อสร้าง',
+    dataSecurity: 'ความปลอดภัยข้อมูล',
+    reduceManual: 'ลดงาน Manual',
+    aiForReport: 'AI ทำรายงาน'
+};
+
+// =============================================================================
+// GOOGLE SHEETS FETCH
+// =============================================================================
+async function fetchFromGoogleSheets() {
+    if (!GOOGLE_SCRIPT_URL) {
+        updateStatus('offline');
+        toast('กรุณาตั้งค่า GOOGLE_SCRIPT_URL ในโค้ด', 'error');
+        return;
+    }
+    updateStatus('loading');
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL);
+        const json = await response.json();
+        if (json.respondents && json.respondents.length > 0) {
+            DATA = json;
+            render();
+            updateStatus('online');
+            toast('โหลดข้อมูลสำเร็จ ' + DATA.respondents.length + ' รายการ', 'success');
+        } else if (json.error) {
+            throw new Error(json.error);
+        } else {
+            updateStatus('online');
+            toast('ไม่มีข้อมูลใน Google Sheets', '');
+            render();
+        }
+    } catch (error) {
+        console.error('Fetch error:', error);
+        updateStatus('error');
+        toast('ไม่สามารถเชื่อมต่อ: ' + error.message, 'error');
+    }
+}
+
+function updateStatus(status) {
+    const dot = document.getElementById('statusDot');
+    const text = document.getElementById('statusText');
+    const update = document.getElementById('lastUpdate');
+    dot.className = 'status-dot';
+    if (status === 'online') { dot.classList.add('online'); text.textContent = 'เชื่อมต่อแล้ว'; }
+    else if (status === 'loading') { dot.classList.add('loading'); text.textContent = 'กำลังโหลด...'; }
+    else if (status === 'error') { dot.classList.add('error'); text.textContent = 'ไม่สามารถเชื่อมต่อ'; }
+    else { text.textContent = 'รอเชื่อมต่อ'; }
+    update.textContent = 'อัพเดท: ' + new Date().toLocaleTimeString('th-TH');
+}
+
+// =============================================================================
+// HELPERS
+// =============================================================================
+function getFiltered() {
+    const dept = document.getElementById('deptFilter').value;
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    return DATA.respondents.filter(r => {
+        const deptMatch = dept === 'all' || r.department === dept;
+        const searchMatch = !search || 
+            (r.name && r.name.toLowerCase().includes(search)) ||
+            (r.position && r.position.toLowerCase().includes(search)) ||
+            (r.department && r.department.toLowerCase().includes(search)) ||
+            (r.creativity && r.creativity.join(' ').toLowerCase().includes(search)) ||
+            (r.concerns && r.concerns.toLowerCase().includes(search));
+        return deptMatch && searchMatch;
+    });
+}
+
+function countBy(arr, key) { 
+    const c = {}; 
+    arr.forEach(i => { 
+        const v = typeof key === 'function' ? key(i) : i[key]; 
+        if (v != null) c[v] = (c[v] || 0) + 1; 
+    }); 
+    return c; 
+}
+
+function flatCount(arr, key) { 
+    const c = {}; 
+    arr.forEach(i => { 
+        const items = i[key]; 
+        if (Array.isArray(items)) items.forEach(v => { if (v) c[v] = (c[v] || 0) + 1; }); 
+    }); 
+    return c; 
+}
+
+function flatCountNested(arr, key) { 
+    const c = {}; 
+    arr.forEach(i => { 
+        const obj = i[key]; 
+        if (obj && typeof obj === 'object') {
+            Object.values(obj).forEach(items => { 
+                if (Array.isArray(items)) items.forEach(v => { if (v) c[v] = (c[v] || 0) + 1; }); 
+            }); 
+        }
+    }); 
+    return c; 
+}
+
+function avg(arr, key) { 
+    if (!arr.length) return 0; 
+    return arr.reduce((s, i) => s + (typeof key === 'function' ? key(i) : (i[key] || 0)), 0) / arr.length; 
+}
+
+function sortObj(obj) { return Object.entries(obj).sort((a, b) => b[1] - a[1]); }
+
+function toast(msg, type = '') { 
+    const t = document.getElementById('toast'); 
+    t.textContent = msg; 
+    t.className = 'toast show ' + (type || ''); 
+    setTimeout(() => t.classList.remove('show'), 3000); 
+}
+
+function emptyState(msg = 'ไม่มีข้อมูล') { 
+    return `<div class="empty-state"><div class="empty-icon">📭</div><p>${msg}</p></div>`; 
+}
+
+// =============================================================================
+// RENDER
+// =============================================================================
+function render() {
+    const d = getFiltered();
+    const hasData = d.length > 0;
+
+    // Header Stats
+    document.getElementById('totalCount').textContent = d.length;
+    const uniqueDepts = [...new Set(d.map(r => r.department).filter(Boolean))];
+    document.getElementById('deptCount').textContent = uniqueDepts.length || '-';
+    const avgLvl = hasData ? avg(d, r => r.experienceLevel || 0) : 0;
+    document.getElementById('avgLevel').textContent = hasData ? 'L' + avgLvl.toFixed(1) : '-';
+
+    // KPIs
+    document.getElementById('kpiLevel').textContent = hasData ? avgLvl.toFixed(1) : '-';
+    const lvlCounts = countBy(d, 'experienceLevel');
+    document.getElementById('kpiLevelHint').textContent = hasData ? sortObj(lvlCounts).slice(0, 2).map(x => 'L' + x[0]).join(' & ') || '-' : '-';
+    
+    const dailyPct = hasData ? Math.round((d.filter(r => r.usageFrequency === 'daily').length / d.length) * 100) : 0;
+    document.getElementById('kpiDaily').textContent = hasData ? dailyPct + '%' : '-';
+    
+    const tools = flatCount(d, 'toolsUsed');
+    const topTool = sortObj(tools)[0];
+    document.getElementById('kpiTool').textContent = topTool ? topTool[0].split(' ')[0] : '-';
+    document.getElementById('kpiToolPct').textContent = topTool ? Math.round(topTool[1] / d.length * 100) + '% ใช้' : '-';
+    
+    const problems = flatCountNested(d, 'problems');
+    document.getElementById('kpiPain').textContent = hasData ? Object.keys(problems).length : '-';
+    
+    const expectKeys = Object.keys(EXPECT_LABELS);
+    const avgExp = hasData ? expectKeys.reduce((s, k) => s + avg(d, r => (r.expectationsScore || {})[k] || 0), 0) / expectKeys.length : 0;
+    document.getElementById('kpiExpect').textContent = hasData ? avgExp.toFixed(1) : '-';
+
+    // Card A: Department Snapshot
+    const deptCounts = countBy(d, 'department');
+    document.getElementById('deptSnapshot').innerHTML = hasData ? sortObj(deptCounts).map(([dept, count]) => `
+        <div class="dept-card"><div class="dept-name">${DEPT_LABELS[dept] || dept}</div><div class="dept-count">${count}</div></div>
+    `).join('') : emptyState('รอข้อมูลจากผู้ตอบแบบสอบถาม');
+
+    // Card B1: Level Distribution
+    document.getElementById('levelDist').innerHTML = [0,1,2,3,4,5].map(l => {
+        const cnt = lvlCounts[l] || 0;
+        const pct = hasData ? Math.round(cnt / d.length * 100) : 0;
+        return `<div class="level-item"><div class="level-badge l${l}">L${l}</div><div class="level-info"><div class="level-top"><span>${LEVEL_LABELS[l]}</span><span class="level-count">${cnt} คน (${pct}%)</span></div><div class="level-track"><div class="level-fill" style="width:${pct}%;background:${LEVEL_COLORS[l]}"></div></div></div></div>`;
+    }).join('');
+
+    // Card B2: Tools
+    const toolCnt = flatCount(d, 'toolsUsed');
+    const genAI = ['ChatGPT (OpenAI)', 'Google Gemini / Bard', 'Claude (Anthropic)', 'Microsoft Copilot'];
+    const msTools = ['Microsoft 365 Copilot', 'Excel AI', 'PowerPoint AI'];
+    const otherAI = ['LINE AI / OA', 'AI สร้างภาพ', 'AI อ่านเอกสาร/OCR', 'AI แปลภาษา'];
+    const renderTools = list => list.map(t => `<div class="tool-chip">${t.split(' ')[0]}<span class="cnt">${toolCnt[t] || 0}</span></div>`).join('');
+    document.getElementById('toolsAdoption').innerHTML = `
+        <div class="tool-section"><div class="tool-label">🤖 Generative AI</div><div class="tool-grid">${renderTools(genAI)}</div></div>
+        <div class="tool-section"><div class="tool-label">📊 Microsoft 365</div><div class="tool-grid">${renderTools(msTools)}</div></div>
+        <div class="tool-section"><div class="tool-label">🔧 Others</div><div class="tool-grid">${renderTools(otherAI)}</div></div>
+    `;
+
+    // Card B3: Frequency
+    const freqCnt = countBy(d, 'usageFrequency');
+    const maxFreq = Math.max(...Object.values(freqCnt), 1);
+    document.getElementById('freqChart').innerHTML = Object.entries(FREQ_MAP).map(([k, l]) => {
+        const cnt = freqCnt[k] || 0;
+        const h = hasData ? Math.round(cnt / maxFreq * 100) : 0;
+        return `<div class="freq-wrap"><div class="freq-bar" style="height:${h}px"><span class="freq-val">${cnt}</span></div><div class="freq-lbl">${l}</div></div>`;
+    }).join('');
+
+    // Card C: Daily Work
+    const dailyWorkAll = flatCountNested(d, 'dailyWork');
+    const repeatWorkAll = flatCount(d, 'repeatWork');
+    const combinedWork = { ...dailyWorkAll };
+    Object.entries(repeatWorkAll).forEach(([k, v]) => combinedWork[k] = (combinedWork[k] || 0) + v);
+    const topDailyWork = sortObj(combinedWork).slice(0, 8);
+    const maxWork = topDailyWork[0] ? topDailyWork[0][1] : 1;
+    document.getElementById('dailyWorkList').innerHTML = topDailyWork.length ? topDailyWork.map(([name, count], i) => `
+        <div class="work-item"><div class="work-rank">${i + 1}</div><div class="work-info"><div class="work-name">${name}</div><div class="work-track"><div class="work-fill" style="width:${count / maxWork * 100}%"></div></div></div><div class="work-pct">${count}</div></div>
+    `).join('') : emptyState();
+
+    // Card D1: Problems
+    const problemList = sortObj(flatCountNested(d, 'problems')).slice(0, 6);
+    document.getElementById('problemList').innerHTML = problemList.length ? problemList.map(([n, c]) => `
+        <div class="problem-item"><div class="problem-icon">⚠️</div><div class="problem-name">${n}</div><div class="problem-cnt">${c}</div></div>
+    `).join('') : emptyState();
+
+    // Card D2: AI Help
+    const helpThemes = sortObj(flatCount(d, 'aiHelpTop3')).slice(0, 8);
+    const icons = ['🤖','📊','📝','🚀','💡','📈','🔍','✨'];
+    document.getElementById('aiHelpThemes').innerHTML = helpThemes.length ? helpThemes.map(([n, c], i) => `
+        <div class="theme-card"><div class="theme-icon">${icons[i % 8]}</div><div><div class="theme-name">${n}</div><div class="theme-votes">${c} คน</div></div></div>
+    `).join('') : emptyState();
+
+    // Card D3: Features Matrix
+    const features = sortObj(flatCountNested(d, 'interestedFeatures'));
+    const matrix = document.getElementById('featureMatrix');
+    matrix.querySelectorAll('.bubble').forEach(b => b.remove());
+    features.slice(0, 12).forEach(([n, c]) => {
+        const impact = 0.3 + Math.random() * 0.4;
+        const effort = 0.2 + Math.random() * 0.6;
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        b.style.left = (effort * 85 + 7) + '%';
+        b.style.top = ((1 - impact) * 85 + 7) + '%';
+        b.innerHTML = `${n.substring(0, 20)}<span class="v">${c}</span>`;
+        matrix.appendChild(b);
+    });
+
+    // Card E1: Expectations
+    document.getElementById('expectTable').innerHTML = `<thead><tr><th>ความคาดหวัง</th><th>คะแนน</th></tr></thead><tbody>${Object.entries(EXPECT_LABELS).map(([k, l]) => {
+        const a = avg(d, r => (r.expectationsScore || {})[k] || 0);
+        return `<tr><td>${l}</td><td><div class="rating-wrap"><div class="rating-bar"><div class="rating-fill" style="width:${a * 20}%"></div></div><span class="rating-score">${hasData ? a.toFixed(1) : '-'}</span></div></td></tr>`;
+    }).join('')}</tbody>`;
+
+    // Card E2: Topics
+    const topics = sortObj(flatCount(d, 'interestedTopics')).slice(0, 8);
+    const topicIcons = ['📚','💻','🎯','📈','🔧','🌟','🧠','🚀'];
+    document.getElementById('topicsGrid').innerHTML = topics.length ? topics.map(([n, c], i) => `
+        <div class="theme-card"><div class="theme-icon">${topicIcons[i % 8]}</div><div><div class="theme-name">${n}</div><div class="theme-votes">${c} คน</div></div></div>
+    `).join('') : emptyState();
+
+    // Card F: Ideas
+    const ideas = d.filter(r => (r.creativity && r.creativity.length) || r.concerns || r.speakerNotes);
+    document.getElementById('ideasList').innerHTML = ideas.length ? ideas.slice(0, 15).map(r => {
+        const creativityText = r.creativity ? r.creativity.join(', ') : '';
+        return `
+            <div class="idea-card">
+                <div class="idea-header">
+                    <span class="idea-badge">${DEPT_LABELS[r.department] || r.department || '-'}</span>
+                    <span style="font-size:.65rem;color:var(--gray)">${r.name || '-'} • ${r.position || ''}</span>
+                </div>
+                <div class="idea-text">
+                    ${creativityText ? '💡 ' + creativityText : ''}
+                    ${r.concerns ? '<br><span style="color:var(--orange)">⚠️ ' + r.concerns + '</span>' : ''}
+                    ${r.speakerNotes ? '<br><em style="color:var(--gray)">[Note: ' + r.speakerNotes + ']</em>' : ''}
+                </div>
+            </div>
+        `;
+    }).join('') : emptyState();
+
+    // Insight Panel
+    const topProblem = problemList[0] ? problemList[0][0] : '-';
+    const topHelp = helpThemes[0] ? helpThemes[0][0] : '-';
+    const l0l1Pct = hasData ? Math.round(((lvlCounts[0] || 0) + (lvlCounts[1] || 0)) / d.length * 100) : 0;
+    const insights = hasData ? [
+        { icon: '📊', text: `ระดับความพร้อมเฉลี่ย L${avgLvl.toFixed(1)} - ${avgLvl < 2 ? 'ต้องเน้นพื้นฐาน' : avgLvl < 3.5 ? 'พร้อมต่อยอด' : 'ทีมพร้อมใช้งานจริง'}` },
+        { icon: '🔥', text: `${dailyPct}% ใช้ AI ทุกวัน - ${dailyPct < 20 ? 'ต้องกระตุ้นการใช้งาน' : dailyPct < 50 ? 'มีโอกาสขยายผล' : 'Adoption สูง'}` },
+        { icon: '⚠️', text: `Pain Point หลัก: "${topProblem}"` },
+        { icon: '💡', text: `สิ่งที่อยากให้ AI ช่วยมากสุด: "${topHelp}"` },
+        { icon: '🎯', text: `${l0l1Pct}% ยังไม่เคยใช้/ใช้น้อย (L0-L1) - ต้องเน้น Hands-on` },
+        { icon: '📈', text: `ความคาดหวังเฉลี่ย ${avgExp.toFixed(1)}/5` }
+    ] : [{ icon: '📭', text: 'รอข้อมูลจากผู้ตอบแบบสอบถาม' }];
+    document.getElementById('insightList').innerHTML = insights.map(ins => `<div class="insight-item"><span class="insight-icon">${ins.icon}</span><span>${ins.text}</span></div>`).join('');
+
+    // Recommendation Panel
+    const recs = [
+        { title: '🎓 Track 1: AI Foundation', items: ['สำหรับ L0-L1', 'AI คืออะไร ทำอะไรได้', 'Hands-on: ลองใช้ ChatGPT', 'Use Case ง่ายๆ ในงานก่อสร้าง'] },
+        { title: '🚀 Track 2: Prompt Engineering', items: ['สำหรับ L2-L3', 'เทคนิคเขียน Prompt', 'Workshop ถอดแบบ/ประมาณการ', 'Best Practices งานเอกสาร'] },
+        { title: '🎯 Track 3: AI for Construction', items: ['สำหรับ L3-L5', 'AI ช่วยถอดแบบ BOQ', 'AI ตรวจเอกสารหน้างาน', 'AI วิเคราะห์ข้อมูลโครงการ'] }
+    ];
+    document.getElementById('recCards').innerHTML = recs.map(r => `<div class="rec-card"><h5>${r.title}</h5><ul>${r.items.map(i => `<li>${i}</li>`).join('')}</ul></div>`).join('');
+}
+
+// =============================================================================
+// ACTIONS
+// =============================================================================
+function resetFilters() { 
+    document.getElementById('deptFilter').value = 'all'; 
+    document.getElementById('searchInput').value = ''; 
+    render(); 
+}
+
+function importData() {
+    try {
+        const json = document.getElementById('importArea').value;
+        if (!json.trim()) { toast('กรุณาวาง JSON', 'error'); return; }
+        const parsed = JSON.parse(json);
+        if (parsed.respondents) DATA = parsed;
+        else if (Array.isArray(parsed)) DATA = { respondents: parsed };
+        else throw new Error('Invalid format');
+        render();
+        toast('นำเข้าข้อมูลสำเร็จ ' + DATA.respondents.length + ' รายการ', 'success');
+    } catch (e) { toast('JSON ไม่ถูกต้อง: ' + e.message, 'error'); }
+}
+
+function exportData() {
+    const json = JSON.stringify(DATA, null, 2);
+    navigator.clipboard.writeText(json).then(() => toast('คัดลอก JSON แล้ว', 'success')).catch(() => {
+        const blob = new Blob([json], { type: 'application/json' });
+        const a = document.createElement('a'); 
+        a.href = URL.createObjectURL(blob); 
+        a.download = 'standard_performance_survey_data.json'; 
+        a.click();
+        toast('ดาวน์โหลด JSON แล้ว', 'success');
+    });
+}
+
+// =============================================================================
+// INIT
+// =============================================================================
+document.getElementById('schemaDisplay').textContent = SCHEMA_DISPLAY;
+render();
+if (GOOGLE_SCRIPT_URL) fetchFromGoogleSheets();
+</script>
+</body>
+</html>
